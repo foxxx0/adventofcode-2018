@@ -5,20 +5,6 @@ def assert(condition)
   raise("assertion failed") unless condition
 end
 
-@[AlwaysInline]
-def extract_params(data : Array(String),
-                   regs : Hash(Char, Int64)) : Array(Int64 | Char)
-  params = [] of Int64 | Char
-  data.flatten.each do |param|
-    if param =~ /[\-]*[0-9]+/
-      params << param.to_i64
-    else
-      params << param.chars.first
-    end
-  end
-  params
-end
-
 def part1(input : Array(String)) : Int64
   freq_changes = input.map { |i| Int64.new(i) }
 
