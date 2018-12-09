@@ -5,10 +5,10 @@ def assert(condition)
   raise("assertion failed") unless condition
 end
 
-def parse(input : String) : Tuple(Int64, UInt64)
+def parse(input : String) : Tuple(Int32, UInt64)
   m = /^(\d+) players; last marble is worth (\d+) points/.match(input)
   raise "parse error" if m.nil? || m.size != 3
-  Tuple.new(m[1].to_i64, m[2].to_u64)
+  Tuple.new(m[1].to_i, m[2].to_u64)
 end
 
 def pp_ring(ring : Deque(UInt64)) : Nil
@@ -19,39 +19,32 @@ def pp_ring(ring : Deque(UInt64)) : Nil
 end
 
 class Game
-  property players : Hash(Int64, UInt64)
-  property ring : Deque(UInt64)
+  property players : Iterator(Int32)
+  property scores : Hash(Int32, UInt64)
   property marble_max : UInt64
+  property ring : Deque(UInt64)
 
-  def initialize(num_players : Int64, @marble_max)
+  def initialize(num_players : Int32, @marble_max)
     @ring = Deque(UInt64).new
-    @players = {} of Int64 => UInt64
-    0i64.upto(num_players - 1).each do |player|
-      @players[player] = 0u64
-    end
+    @scores = Hash(Int32, UInt64).new(0)
+    @players = num_players.times.each.cycle
   end
 
   def play
-    # initial step
-    ring.push(0i64)
-    # pp_ring(ring)
-
+    ring.push(0u64)
     1u64.upto(@marble_max).each do |marble|
       if (marble % 23) == 0
         ring.rotate!(-7)
-        player = (marble % @players.keys.size).to_i64
-        removed = ring.shift
-        @players[player] += marble + removed
+        @scores[@players.first] += marble + ring.shift
       else
         ring.rotate!(2)
         ring.unshift(marble)
       end
-      # pp_ring(ring)
     end
   end
 
-  def winner : Tuple(Int64, UInt64)
-    @players.max_by { |i, s| s }
+  def winner : Tuple(Int32, UInt64)
+    @scores.max_by { |p, s| s }
   end
 end
 
